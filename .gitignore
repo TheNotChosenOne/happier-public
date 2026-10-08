@@ -1,0 +1,11 @@
+.local.gitignore
+# corpora are local-only, except the mystic benchmark corpus.
+# `test_cases/*`, not `test_cases/`: git will not descend into an ignored
+# directory, so the negation below would never be reconsidered.
+test_cases/*
+!test_cases/mystic6x6/
+!test_cases/regression/
+Cargo.lock
+
+# staging area for files pending deletion
+delete/

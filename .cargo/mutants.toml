@@ -1,0 +1,7 @@
+# diagnostics and disabled experiments generate junk mutants; skip them.
+exclude_re = [
+    "analyze_problem",
+    "debug_fmt",
+    "impl std::fmt::Debug",
+    "hinted_guess",
+]

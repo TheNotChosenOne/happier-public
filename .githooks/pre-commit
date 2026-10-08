@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# Install: git config core.hooksPath .githooks
+# Skip once: git commit --no-verify
+# Full 256-combination sweep: HAPPIER_HOOK_ALL_FEATURES=1 git commit
+set -uo pipefail
+
+cd "$(git rev-parse --show-toplevel)" || exit 1
+
+failed=0
+run() {
+    local label="$1"
+    shift
+    if ! out=$("$@" 2>&1); then
+        printf '\n=== %s ===\n%s\n' "$label" "$out"
+        failed=1
+    fi
+}
+
+if ! git diff --quiet; then
+    echo "note: unstaged changes present; checking the working tree, not the index"
+fi
+
+run "cargo fmt --check" cargo fmt --check
+
+# The union of warnings is feature-dependent: dead code under one flag is live
+# under another, so a single configuration is not enough.
+for features in "" "--all-features" "--no-default-features"; do
+    run "cargo clippy --all-targets ${features:-(default)}" \
+        cargo clippy --all-targets --no-deps $features -- -D warnings
+done
+
+run "cargo test" cargo test --no-fail-fast
+
+if [ -n "${HAPPIER_HOOK_ALL_FEATURES:-}" ]; then
+    feats=(clause-learning contracts rsat serde pretty clause-sorted unchecked-move trace)
+    for ((m = 0; m < 1 << ${#feats[@]}; m++)); do
+        sel=""
+        for ((i = 0; i < ${#feats[@]}; i++)); do
+            (((m >> i) & 1)) && sel="$sel,${feats[i]}"
+        done
+        run "clippy [${sel:-none}]" cargo clippy --all-targets --no-deps \
+            --no-default-features ${sel:+--features "${sel#,}"} -- -D warnings
+    done
+fi
+
+if [ "$failed" -ne 0 ]; then
+    echo
+    echo "pre-commit failed; commit with --no-verify to bypass"
+    exit 1
+fi

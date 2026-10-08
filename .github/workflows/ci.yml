@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    name: fmt, clippy, test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v2
+
+      - run: cargo fmt --check
+
+      # warnings are feature-dependent: dead code under one flag is live under
+      # another.
+      - run: cargo clippy --all-targets --no-deps -- -D warnings
+      - run: cargo clippy --all-targets --no-deps --all-features -- -D warnings
+      - run: cargo clippy --all-targets --no-deps --no-default-features -- -D warnings
+
+      - run: cargo test --no-fail-fast
+      - run: cargo test --no-fail-fast --no-default-features --features clause-learning,std
+
+  no_std:
+    name: no_std cross-compile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: thumbv7em-none-eabi, wasm32-unknown-unknown
+
+      - uses: Swatinem/rust-cache@v2
+
+      # a target without std proves the crate links only core and alloc.
+      - run: cargo build --no-default-features --target thumbv7em-none-eabi
+      - run: cargo build --no-default-features --target wasm32-unknown-unknown
+
+  msrv:
+    name: msrv 1.88
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: dtolnay/rust-toolchain@1.88
+
+      - uses: Swatinem/rust-cache@v2
+
+      - run: cargo build --all-features

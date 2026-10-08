@@ -1,0 +1,40 @@
+[package]
+name = "happier"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+
+[dependencies]
+anyhow = { version = "1.0.99", optional = true }
+bincode = { version = "2.0.1", optional = true }
+colored = { version = "3.0.0", optional = true }
+contracts = { version = "0.6.6", optional = true }
+rustsat = { version = "0.7", optional = true }
+tracing = { version = "0.1.44", optional = true, default-features = false, features = [
+    "std",
+] }
+
+[dev-dependencies]
+happier = { path = ".", default-features = false, features = ["rsat", "serde", "pretty", "unchecked-move"] }
+rustsat = "0.7"
+rustsat-minisat = "0.7"
+criterion = "0.7.0"
+itertools = "0.14.0"
+
+[[bench]]
+name = "mystic_bench"
+harness = false
+
+[features]
+default = ["clause-learning", "std", "unchecked"]
+std = []
+contracts = ["dep:contracts"]
+rsat = ["dep:rustsat", "dep:anyhow", "std"]
+serde = ["dep:bincode"]
+pretty = ["dep:colored", "std"]
+
+clause-learning = []
+clause-sorted = []
+unchecked = []
+unchecked-move = []
+trace = ["dep:tracing"]

@@ -1,0 +1,48 @@
+[package]
+name = "happier-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+arbitrary = { version = "1.3", features = ["derive"] }
+rustsat = { version = "*", path = "../../rustsat" }
+rustsat-minisat = { version = "*", path = "../../rustsat/minisat" }
+bumpalo = "3.19.0"
+bincode = "2.0.1"
+
+[dependencies.happier]
+path = ".."
+features = ["rsat", "serde", "contracts"]
+
+[[bin]]
+name = "agreement"
+path = "fuzz_targets/agreement.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "satisfy"
+path = "fuzz_targets/satisfy.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "unstaged"
+path = "fuzz_targets/unstaged.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "can_pos"
+path = "fuzz_targets/can_pos.rs"
+test = false
+doc = false
+bench = false
